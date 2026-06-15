@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { MergeGroup, MergeSource } from "@/lib/types";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { DEFAULT_OUTPUT_FOLDER } from "@/lib/folder-name";
 import { totalPages } from "@/lib/matching";
+import type { MergeGroup, MergeSource } from "@/lib/types";
 
 type MergePreviewPanelProps = {
   groups: MergeGroup[];
   unmatched: MergeSource[];
+  outputFolderName: string;
   isMerging: boolean;
+  onOutputFolderNameChange: (name: string) => void;
   onReorderSource: (
     groupId: string,
     sourceId: string,
@@ -34,38 +40,45 @@ function SourceRow({
   onRemove: () => void;
 }) {
   return (
-    <li className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-t border-neutral-200 py-3 text-sm">
-      <span className="w-6 text-neutral-400">{index + 1}</span>
-      <div>
-        <p>{source.folderName}</p>
-        <p className="text-neutral-500">
+    <li className="flex items-center gap-3 rounded-lg bg-[var(--background)] px-3 py-2.5">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-xs font-medium text-[var(--muted)] border border-[var(--border)]">
+        {index + 1}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{source.folderName}</p>
+        <p className="text-xs text-[var(--muted)]">
           {source.pageCount} page{source.pageCount === 1 ? "" : "s"}
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <button
+      <div className="flex shrink-0 items-center gap-1">
+        <Button
           type="button"
+          variant="ghost"
+          className="h-8 w-8 px-0 text-xs"
           disabled={index === 0}
           onClick={() => onMove("up")}
-          className="text-xs uppercase tracking-wide underline underline-offset-4 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-30"
+          aria-label="Move up"
         >
-          Up
-        </button>
-        <button
+          ↑
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          className="h-8 w-8 px-0 text-xs"
           disabled={index === total - 1}
           onClick={() => onMove("down")}
-          className="text-xs uppercase tracking-wide underline underline-offset-4 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-30"
+          aria-label="Move down"
         >
-          Down
-        </button>
-        <button
+          ↓
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          className="h-8 px-2 text-xs text-red-600"
           onClick={onRemove}
-          className="text-xs uppercase tracking-wide underline underline-offset-4"
         >
-          Remove
-        </button>
+          ✕
+        </Button>
       </div>
     </li>
   );
@@ -91,52 +104,49 @@ function MergeGroupBlock({
   const pages = totalPages(group.sources);
 
   return (
-    <article className="border-b border-black pb-8">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-neutral-500">
-            Output file {index + 1}
-          </p>
-          <h3 className="text-xl font-semibold">{group.fileName}</h3>
-          <p className="text-sm text-neutral-600">
+    <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold">{group.fileName}</h3>
+            <Badge tone="success">{pages} pages merged</Badge>
+          </div>
+          <p className="text-sm text-[var(--muted)]">
             {group.sources.length} source
-            {group.sources.length === 1 ? "" : "s"} · {pages} total page
-            {pages === 1 ? "" : "s"} after merge
+            {group.sources.length === 1 ? "" : "s"} · pages combined in order below
           </p>
         </div>
-
-        <div className="flex items-center gap-4 text-xs uppercase tracking-wide">
-          <button
+        <div className="flex flex-wrap gap-2">
+          <Button
             type="button"
+            variant="secondary"
+            className="h-8 px-3 text-xs"
             disabled={index === 0}
             onClick={() => onMoveGroup(group.id, "up")}
-            className="underline underline-offset-4 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-30"
           >
-            Move up
-          </button>
-          <button
+            ↑ Move up
+          </Button>
+          <Button
             type="button"
+            variant="secondary"
+            className="h-8 px-3 text-xs"
             disabled={index === totalGroups - 1}
             onClick={() => onMoveGroup(group.id, "down")}
-            className="underline underline-offset-4 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-30"
           >
-            Move down
-          </button>
-          <button
+            ↓ Move down
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            className="h-8 px-3 text-xs"
             onClick={() => onRemoveGroup(group.id)}
-            className="underline underline-offset-4"
           >
-            Skip file
-          </button>
+            Skip
+          </Button>
         </div>
       </div>
 
-      <p className="mb-2 text-xs uppercase tracking-widest text-neutral-500">
-        Merge order
-      </p>
-
-      <ul>
+      <ul className="space-y-2">
         {group.sources.map((source, sourceIndex) => (
           <SourceRow
             key={source.id}
@@ -157,7 +167,9 @@ function MergeGroupBlock({
 export function MergePreviewPanel({
   groups,
   unmatched,
+  outputFolderName,
   isMerging,
+  onOutputFolderNameChange,
   onReorderSource,
   onRemoveSource,
   onMoveGroup,
@@ -171,25 +183,34 @@ export function MergePreviewPanel({
   const invalidGroups = groups.filter((group) => group.sources.length < 2);
 
   return (
-    <section className="space-y-10">
-      <div className="space-y-3">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Preview & set merge order
+    <section className="space-y-8">
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Review merge order
         </h2>
-        <p className="max-w-2xl text-sm leading-6 text-neutral-600">
-          PDFs are grouped by file name. Reorder sources to control page
-          sequence. The first source&apos;s pages come first, then the second,
-          and so on.
+        <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
+          Files are matched by name. Reorder sources to control page sequence,
+          then merge and download into your chosen folder.
         </p>
       </div>
 
+      <div className="max-w-md">
+        <Input
+          label="Output folder name"
+          hint={`Default: ${DEFAULT_OUTPUT_FOLDER}. Files download as a ZIP containing this folder.`}
+          value={outputFolderName}
+          onChange={(event) => onOutputFolderNameChange(event.target.value)}
+          placeholder={DEFAULT_OUTPUT_FOLDER}
+        />
+      </div>
+
       {mergeableGroups.length === 0 ? (
-        <p className="text-sm text-neutral-600">
-          No matching file names were found across folders. Add folders that
-          share PDF names, then try again.
+        <p className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-8 text-center text-sm text-[var(--muted)]">
+          No matching file names found across folders. Go back and add folders
+          that share PDF file names.
         </p>
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-4">
           {mergeableGroups.map((group, index) => (
             <MergeGroupBlock
               key={group.id}
@@ -206,61 +227,61 @@ export function MergePreviewPanel({
       )}
 
       {invalidGroups.length > 0 && (
-        <div className="space-y-2 border-t border-neutral-200 pt-6 text-sm text-neutral-600">
-          <p>
-            {invalidGroups.length} group
-            {invalidGroups.length === 1 ? "" : "s"} need at least two sources
-            to merge and will be skipped.
-          </p>
-        </div>
+        <p className="text-sm text-[var(--muted)]">
+          {invalidGroups.length} group
+          {invalidGroups.length === 1 ? "" : "s"} with fewer than 2 sources will
+          be skipped.
+        </p>
       )}
 
       {showUnmatched && unmatched.length > 0 && (
-        <div className="space-y-3 border-t border-neutral-200 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-widest">
-              Unmatched files
-            </h3>
-            <button
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Unmatched files</h3>
+            <Button
               type="button"
+              variant="ghost"
+              className="h-8 px-2 text-xs"
               onClick={() => setShowUnmatched(false)}
-              className="text-xs underline underline-offset-4"
             >
               Hide
-            </button>
+            </Button>
           </div>
-          <p className="text-sm text-neutral-600">
-            These PDFs appear in only one folder and will not be included in the
-            merge.
+          <p className="mb-3 text-sm text-[var(--muted)]">
+            These appear in only one folder and won&apos;t be included.
           </p>
-          <ul className="divide-y divide-neutral-200 text-sm">
+          <ul className="space-y-2">
             {unmatched.map((source) => (
-              <li key={source.id} className="py-2">
-                {source.name}{" "}
-                <span className="text-neutral-500">in {source.folderName}</span>
+              <li
+                key={source.id}
+                className="flex items-center justify-between rounded-lg bg-[var(--background)] px-3 py-2 text-sm"
+              >
+                <span>{source.name}</span>
+                <span className="text-xs text-[var(--muted)]">
+                  {source.folderName}
+                </span>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4 border-t border-black pt-6">
-        <button
+      <div className="flex flex-wrap gap-3 border-t border-[var(--border)] pt-6">
+        <Button
           type="button"
+          variant="secondary"
           disabled={isMerging}
           onClick={onBack}
-          className="border border-black px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-70 disabled:opacity-40"
         >
-          Back
-        </button>
-        <button
+          ← Back
+        </Button>
+        <Button
           type="button"
           disabled={isMerging || mergeableGroups.length === 0}
           onClick={onMerge}
-          className="border border-black bg-black px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isMerging ? "Merging..." : "Merge PDFs"}
-        </button>
+          {isMerging ? "Merging PDFs…" : "Merge & download"}
+        </Button>
       </div>
     </section>
   );

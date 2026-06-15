@@ -5,9 +5,11 @@ import { DownloadPanel } from "@/components/DownloadPanel";
 import { FolderUploadPanel } from "@/components/FolderUploadPanel";
 import { MergePreviewPanel } from "@/components/MergePreviewPanel";
 import { StepIndicator } from "@/components/StepIndicator";
+import { downloadResultsAsFolder } from "@/lib/download";
 import { parseFolderUpload, uniqueFolderName } from "@/lib/folder-parser";
+import { DEFAULT_OUTPUT_FOLDER } from "@/lib/folder-name";
 import { buildMergeGroups } from "@/lib/matching";
-import { downloadResults, mergeAllGroups } from "@/lib/merge-service";
+import { mergeAllGroups } from "@/lib/merge-service";
 import type {
   AppStep,
   MergeGroup,
@@ -29,6 +31,8 @@ export function PdfMergerApp() {
   const [groups, setGroups] = useState<MergeGroup[]>([]);
   const [unmatched, setUnmatched] = useState<MergeSource[]>([]);
   const [results, setResults] = useState<MergeResult[]>([]);
+  const [outputFolderName, setOutputFolderName] = useState(DEFAULT_OUTPUT_FOLDER);
+  const [autoDownloaded, setAutoDownloaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -39,37 +43,34 @@ export function PdfMergerApp() {
     [groups],
   );
 
-  const handleAddFolder = useCallback(
-    async (fileList: FileList) => {
-      setError(null);
-      setNotice(null);
-      setIsLoading(true);
+  const handleAddFolder = useCallback(async (fileList: FileList) => {
+    setError(null);
+    setNotice(null);
+    setIsLoading(true);
 
-      try {
-        const { folder, skippedCount } = await parseFolderUpload(fileList);
+    try {
+      const { folder, skippedCount } = await parseFolderUpload(fileList);
 
-        setFolders((current) => {
-          const name = uniqueFolderName(
-            folder.name,
-            current.map((item) => item.name),
-          );
+      setFolders((current) => {
+        const name = uniqueFolderName(
+          folder.name,
+          current.map((item) => item.name),
+        );
 
-          return [...current, { ...folder, name }];
-        });
+        return [...current, { ...folder, name }];
+      });
 
-        if (skippedCount > 0) {
-          setNotice(
-            `Ignored ${skippedCount} non-PDF file${skippedCount === 1 ? "" : "s"} in "${folder.name}".`,
-          );
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to read folder.");
-      } finally {
-        setIsLoading(false);
+      if (skippedCount > 0) {
+        setNotice(
+          `Ignored ${skippedCount} non-PDF file${skippedCount === 1 ? "" : "s"} in "${folder.name}".`,
+        );
       }
-    },
-    [],
-  );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to read folder.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleRemoveFolder = useCallback((folderId: string) => {
     setFolders((current) => current.filter((folder) => folder.id !== folderId));
@@ -167,12 +168,15 @@ export function PdfMergerApp() {
       const merged = await mergeAllGroups(mergeableGroups);
       setResults(merged);
       setStep("done");
+
+      await downloadResultsAsFolder(merged, outputFolderName);
+      setAutoDownloaded(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Merge failed.");
     } finally {
       setIsMerging(false);
     }
-  }, [mergeableGroups]);
+  }, [mergeableGroups, outputFolderName]);
 
   const handleStartOver = useCallback(() => {
     setStep("upload");
@@ -180,67 +184,86 @@ export function PdfMergerApp() {
     setGroups([]);
     setUnmatched([]);
     setResults([]);
+    setOutputFolderName(DEFAULT_OUTPUT_FOLDER);
+    setAutoDownloaded(false);
     setNotice(null);
     setError(null);
   }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-12 px-6 py-12 sm:px-10">
-      <header className="space-y-6 border-b border-black pb-8">
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-            PDF Merger
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Merge PDFs by file name
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-neutral-600">
-            Upload multiple folders of PDFs. Matching file names are combined in
-            the order you choose.
-          </p>
-        </div>
-        <StepIndicator current={step} />
-      </header>
+    <div className="min-h-screen">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-14">
+        <header className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)] text-sm text-white">
+                PDF
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  PDF Merger
+                </h1>
+                <p className="text-sm text-[var(--muted)]">
+                  Match by filename · merge · download
+                </p>
+              </div>
+            </div>
+          </div>
+          <StepIndicator current={step} />
+        </header>
 
-      {error && (
-        <p className="border-l-2 border-black pl-4 text-sm" role="alert">
-          {error}
-        </p>
-      )}
+        <main className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sm:p-8">
+          {error && (
+            <div
+              className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
 
-      {step === "upload" && (
-        <FolderUploadPanel
-          folders={folders}
-          isLoading={isLoading}
-          notice={notice}
-          onAddFolder={handleAddFolder}
-          onRemoveFolder={handleRemoveFolder}
-          onContinue={handleContinueToPreview}
-        />
-      )}
+          {step === "upload" && (
+            <FolderUploadPanel
+              folders={folders}
+              isLoading={isLoading}
+              notice={notice}
+              onAddFolder={handleAddFolder}
+              onRemoveFolder={handleRemoveFolder}
+              onContinue={handleContinueToPreview}
+            />
+          )}
 
-      {step === "preview" && (
-        <MergePreviewPanel
-          groups={groups}
-          unmatched={unmatched}
-          isMerging={isMerging}
-          onReorderSource={handleReorderSource}
-          onRemoveSource={handleRemoveSource}
-          onMoveGroup={handleMoveGroup}
-          onRemoveGroup={handleRemoveGroup}
-          onBack={() => setStep("upload")}
-          onMerge={handleMerge}
-        />
-      )}
+          {step === "preview" && (
+            <MergePreviewPanel
+              groups={groups}
+              unmatched={unmatched}
+              outputFolderName={outputFolderName}
+              isMerging={isMerging}
+              onOutputFolderNameChange={setOutputFolderName}
+              onReorderSource={handleReorderSource}
+              onRemoveSource={handleRemoveSource}
+              onMoveGroup={handleMoveGroup}
+              onRemoveGroup={handleRemoveGroup}
+              onBack={() => setStep("upload")}
+              onMerge={handleMerge}
+            />
+          )}
 
-      {step === "done" && (
-        <DownloadPanel
-          results={results}
-          onDownloadZip={() => downloadResults(results, true)}
-          onDownloadIndividual={() => downloadResults(results, false)}
-          onStartOver={handleStartOver}
-        />
-      )}
+          {step === "done" && (
+            <DownloadPanel
+              results={results}
+              outputFolderName={outputFolderName}
+              autoDownloaded={autoDownloaded}
+              onOutputFolderNameChange={setOutputFolderName}
+              onStartOver={handleStartOver}
+            />
+          )}
+        </main>
+
+        <footer className="text-center text-xs text-[var(--muted)]">
+          All processing happens in your browser. Files never leave your device.
+        </footer>
+      </div>
     </div>
   );
 }

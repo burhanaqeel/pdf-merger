@@ -1,5 +1,4 @@
-import JSZip from "jszip";
-import { mergePdfFiles, downloadBlob } from "@/lib/pdf/utils";
+import { mergePdfFiles } from "@/lib/pdf/utils";
 import type { MergeGroup, MergeResult } from "@/lib/types";
 import { totalPages } from "@/lib/matching";
 
@@ -24,29 +23,4 @@ export async function mergeAllGroups(
   }
 
   return results;
-}
-
-export async function downloadResults(
-  results: MergeResult[],
-  asZip: boolean,
-): Promise<void> {
-  if (results.length === 0) {
-    return;
-  }
-
-  if (!asZip || results.length === 1) {
-    for (const result of results) {
-      downloadBlob(result.blob, result.fileName);
-    }
-    return;
-  }
-
-  const zip = new JSZip();
-
-  for (const result of results) {
-    zip.file(result.fileName, result.blob);
-  }
-
-  const zipBlob = await zip.generateAsync({ type: "blob" });
-  downloadBlob(zipBlob, "merged-pdfs.zip");
 }
