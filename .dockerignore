@@ -14,10 +14,9 @@ dist
 .DS_Store
 *.pem
 
-# env files
+# env files (not baked into image)
 .env
 .env.*
-!.env.example
 
 # git
 .git

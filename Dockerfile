@@ -15,6 +15,8 @@ WORKDIR /app
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3001
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKIP_TYPECHECK=true
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

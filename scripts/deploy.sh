@@ -5,8 +5,19 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 if [[ ! -f .env.production ]]; then
-  echo "Error: .env.production not found."
-  echo "Run: cp .env.production.example .env.production"
+  echo "Error: .env.production not found in $(pwd)"
+  echo ""
+  echo "Create it with:"
+  echo "  nano .env.production"
+  echo ""
+  echo "Paste:"
+  cat <<'EOF'
+NODE_ENV=production
+PORT=3001
+HOSTNAME=0.0.0.0
+NEXT_PUBLIC_APP_URL=http://139.162.60.105:3001
+NEXT_TELEMETRY_DISABLED=1
+EOF
   exit 1
 fi
 
