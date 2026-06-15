@@ -1,0 +1,3 @@
+cd /srv/PDF-MERGER
+git pull
+./scripts/deploy.sh
