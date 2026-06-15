@@ -3,13 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start --hostname 0.0.0.0",
+    "deploy": "bash scripts/deploy.sh",
+    "lint": "eslint",
+    "docker:dev": "docker compose --env-file .env.local --profile dev up --build",
+    "docker:dev:down": "docker compose --env-file .env.local --profile dev down",
+    "docker:prod": "docker compose --env-file .env.production --profile prod up --build -d",
+    "docker:prod:down": "docker compose --env-file .env.production --profile prod down"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "next": "16.2.9",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

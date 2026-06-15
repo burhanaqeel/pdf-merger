@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PDF Merger
 
-## Getting Started
+Merge PDF files from multiple folders by matching file names. Runs entirely in the browser — no uploads to a server.
 
-First, run the development server:
+## Project structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+pdf-merger/
+├── src/
+│   ├── app/              # Next.js App Router
+│   ├── components/       # UI components
+│   └── lib/              # PDF parsing, matching, merge logic
+├── public/
+├── scripts/
+│   └── deploy.sh         # Production deploy on the VM
+├── Dockerfile            # Production image
+├── Dockerfile.dev        # Local Docker development
+├── docker-compose.yml
+├── .env.local            # Local env (gitignored)
+└── .env.production       # Server env (gitignored)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Local | Production |
+|---|---|---|
+| `NODE_ENV` | `development` | `production` |
+| `PORT` | `3001` | `3001` |
+| `HOSTNAME` | `0.0.0.0` | `0.0.0.0` |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3001` | `http://139.162.60.105:3001` |
+| `NEXT_TELEMETRY_DISABLED` | `1` | `1` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Local (this machine)
 
-## Learn More
+File: `.env.local` (already created)
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NODE_ENV=development
+PORT=3001
+HOSTNAME=0.0.0.0
+NEXT_PUBLIC_APP_URL=http://localhost:3001
+NEXT_TELEMETRY_DISABLED=1
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production (VM at 139.162.60.105)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+File: `.env.production` (copy from `.env.production.example` on the server)
 
-## Deploy on Vercel
+```env
+NODE_ENV=production
+PORT=3001
+HOSTNAME=0.0.0.0
+NEXT_PUBLIC_APP_URL=http://139.162.60.105:3001
+NEXT_TELEMETRY_DISABLED=1
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Local development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Without Docker:**
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:3001
+
+**With Docker:**
+
+```bash
+npm run docker:dev
+```
+
+## Production deployment
+
+Target URL: **http://139.162.60.105:3001**
+
+### 1. Push to GitHub (from your machine)
+
+```bash
+git add .
+git commit -m "Prepare PDF Merger for production deployment"
+git remote add origin https://github.com/YOUR_USERNAME/pdf-merger.git
+git push -u origin main
+```
+
+Use `master` instead of `main` if that is your default branch.
+
+### 2. First-time setup on the VM
+
+SSH into the server, then:
+
+```bash
+# Install Docker if not already installed
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+# Log out and back in so docker group applies
+
+# Clone the repo
+cd ~
+git clone https://github.com/YOUR_USERNAME/pdf-merger.git
+cd pdf-merger
+
+# Create production env
+cp .env.production.example .env.production
+
+# Open port 3001 in the firewall (if ufw is enabled)
+sudo ufw allow 3001/tcp
+sudo ufw status
+
+# Build and start
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+### 3. Redeploy after changes
+
+On the VM:
+
+```bash
+cd ~/pdf-merger
+git pull
+./scripts/deploy.sh
+```
+
+Or:
+
+```bash
+npm run deploy
+```
+
+### 4. Useful commands on the server
+
+```bash
+docker compose --env-file .env.production --profile prod ps          # container status
+docker compose --env-file .env.production --profile prod logs -f     # live logs
+docker compose --env-file .env.production --profile prod down        # stop app
+```
+
+## Notes
+
+- The app at http://139.162.60.105/ (port 80) is a separate service. PDF Merger runs on **port 3001**.
+- To serve it at the root URL without `:3001`, add an nginx reverse proxy later.
+- PDF processing happens in the user's browser. The server only serves the Next.js app.

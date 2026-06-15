@@ -1,0 +1,42 @@
+# dependencies
+node_modules
+npm-debug.log*
+
+# next.js
+.next
+out
+
+# production
+build
+dist
+
+# misc
+.DS_Store
+*.pem
+
+# env files
+.env
+.env.*
+!.env.example
+
+# git
+.git
+.gitignore
+
+# docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# IDE
+.vscode
+.idea
+
+# testing
+coverage
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
