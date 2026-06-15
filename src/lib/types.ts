@@ -26,7 +26,22 @@ export type MergeGroup = {
   sources: MergeSource[];
 };
 
-export type AppStep = "upload" | "preview" | "done";
+export type MergePage = {
+  id: string;
+  sourceId: string;
+  sourceFileName: string;
+  folderName: string;
+  pageIndex: number;
+};
+
+export type ArrangeGroup = {
+  id: string;
+  fileName: string;
+  sources: MergeSource[];
+  pages: MergePage[];
+};
+
+export type AppStep = "upload" | "preview" | "arrange" | "done";
 
 export type MergeResult = {
   fileName: string;

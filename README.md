@@ -1,14 +1,55 @@
 # PDF Merger
 
-Merge PDF files from multiple folders by matching file names. Runs entirely in the browser.
+Merge PDF files from multiple folders by matching file names. All processing runs in the browser — files never leave the device.
 
-Repo: https://github.com/burhanaqeel/pdf-merger
+**Live:** http://139.162.60.105:3001  
+**Repo:** https://github.com/burhanaqeel/pdf-merger
+
+## App flow
+
+1. **Upload** — Add folders of PDFs (no subfolders)
+2. **Sources** — Reorder which PDFs are combined per output file
+3. **Pages** — Tab per merged file; preview thumbnails and reorder/remove pages
+4. **Download** — Named folder as ZIP (or save directly to disk in Chrome/Edge)
+
+## Project structure
+
+```
+src/
+├── app/                    # Next.js layout, styles, entry page
+├── components/
+│   ├── ui/                 # Button, Input, Badge
+│   ├── PdfMergerApp.tsx    # Shell & step routing
+│   ├── FolderUploadPanel.tsx
+│   ├── MergePreviewPanel.tsx
+│   ├── PageArrangePanel.tsx
+│   ├── PageThumbnail.tsx
+│   ├── DownloadPanel.tsx
+│   └── StepIndicator.tsx
+├── hooks/
+│   └── usePdfMerger.ts     # App state & actions
+├── lib/
+│   ├── array.ts            # Reorder helper
+│   ├── download.ts         # ZIP download, folder save, merge output
+│   ├── folder-name.ts      # Output folder naming
+│   ├── folder-parser.ts    # Folder upload parsing
+│   ├── id.ts
+│   ├── matching.ts         # Group PDFs by filename
+│   ├── pages.ts            # Build page lists for arrange step
+│   ├── types.ts
+│   └── pdf/
+│       ├── merge-pages.ts  # Page-order merge (pdf-lib)
+│       ├── thumbnail.ts    # Page previews (pdfjs-dist)
+│       └── utils.ts        # PDF validation & page count
+└── types/
+    └── file-system.d.ts    # Directory picker types
+```
 
 ## Environment files
 
-These are **not** in Git. Create them manually on each machine.
+Not committed to Git — create manually on each machine.
 
-### `.env.local` (your Windows machine)
+### `.env.local` (Windows / local dev)
 
 ```env
 NODE_ENV=development
@@ -18,7 +59,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001
 NEXT_TELEMETRY_DISABLED=1
 ```
 
-### `.env.production` (VM at 139.162.60.105)
+### `.env.production` (VM)
 
 ```env
 NODE_ENV=production
@@ -39,50 +80,29 @@ Open http://localhost:3001
 
 Docker dev: `npm run docker:dev`
 
-## Production deployment on VM
+## Update production server
 
-Target: **http://139.162.60.105:3001**
-
-### Clone into `/srv/PDF-MERGER` (not a subfolder)
-
-If `/srv/PDF-MERGER` is empty:
+After pushing changes to GitHub:
 
 ```bash
+# 1. On your machine
+git add .
+git commit -m "Your message"
+git push
+
+# 2. On the VM
 cd /srv/PDF-MERGER
-git clone https://github.com/burhanaqeel/pdf-merger.git .
-```
-
-Use `.` at the end so files land directly in `/srv/PDF-MERGER`, not `/srv/PDF-MERGER/pdf-merger`.
-
-If SSH clone hangs, use HTTPS (above). SSH only works after adding a GitHub deploy key to the VM.
-
-### First-time server setup
-
-```bash
-cd /srv/PDF-MERGER
-
-# Create production env (not in Git)
-nano .env.production
-# Paste the production env block from above, save (Ctrl+O, Enter, Ctrl+X)
-
-# Docker
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-# Log out and SSH back in
-
-# Firewall
-sudo ufw allow 3001/tcp
-
-# Deploy
-chmod +x scripts/deploy.sh
+git pull
 ./scripts/deploy.sh
 ```
 
-### Redeploy
+If `git pull` fails due to local changes on the server:
 
 ```bash
-cd /srv/PDF-MERGER
+git checkout -- scripts/deploy.sh
 git pull
+sed -i 's/\r$//' scripts/deploy.sh
+chmod +x scripts/deploy.sh
 ./scripts/deploy.sh
 ```
 
@@ -94,11 +114,14 @@ docker compose --env-file .env.production --profile prod logs -f
 docker compose --env-file .env.production --profile prod down
 ```
 
-## Troubleshooting clone
+## First-time server setup
 
-| Problem | Fix |
-|---|---|
-| `Cloning into 'pdf-merger'...` hangs | SSH key not set up — use HTTPS clone instead |
-| Clone creates nested `pdf-merger/` folder | Use `git clone ... .` with `.` at the end |
-| `destination path already exists` | Directory not empty — use empty dir or clone into `.` |
-| `deploy.sh: cannot execute` | Run `sed -i 's/\r$//' scripts/deploy.sh` then `chmod +x scripts/deploy.sh` |
+```bash
+cd /srv/PDF-MERGER
+git clone https://github.com/burhanaqeel/pdf-merger.git .
+
+nano .env.production   # paste production env from above
+
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```

@@ -3,17 +3,12 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { DEFAULT_OUTPUT_FOLDER } from "@/lib/folder-name";
 import { totalPages } from "@/lib/matching";
 import type { MergeGroup, MergeSource } from "@/lib/types";
 
 type MergePreviewPanelProps = {
   groups: MergeGroup[];
   unmatched: MergeSource[];
-  outputFolderName: string;
-  isMerging: boolean;
-  onOutputFolderNameChange: (name: string) => void;
   onReorderSource: (
     groupId: string,
     sourceId: string,
@@ -23,7 +18,7 @@ type MergePreviewPanelProps = {
   onMoveGroup: (groupId: string, direction: "up" | "down") => void;
   onRemoveGroup: (groupId: string) => void;
   onBack: () => void;
-  onMerge: () => void;
+  onContinue: () => void;
 };
 
 function SourceRow({
@@ -167,15 +162,12 @@ function MergeGroupBlock({
 export function MergePreviewPanel({
   groups,
   unmatched,
-  outputFolderName,
-  isMerging,
-  onOutputFolderNameChange,
   onReorderSource,
   onRemoveSource,
   onMoveGroup,
   onRemoveGroup,
   onBack,
-  onMerge,
+  onContinue,
 }: MergePreviewPanelProps) {
   const [showUnmatched, setShowUnmatched] = useState(unmatched.length > 0);
 
@@ -189,19 +181,9 @@ export function MergePreviewPanel({
           Review merge order
         </h2>
         <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
-          Files are matched by name. Reorder sources to control page sequence,
-          then merge and download into your chosen folder.
+          Files are matched by name. Reorder sources to set the initial page
+          sequence, then continue to arrange individual pages.
         </p>
-      </div>
-
-      <div className="max-w-md">
-        <Input
-          label="Output folder name"
-          hint={`Default: ${DEFAULT_OUTPUT_FOLDER}. Files download as a ZIP containing this folder.`}
-          value={outputFolderName}
-          onChange={(event) => onOutputFolderNameChange(event.target.value)}
-          placeholder={DEFAULT_OUTPUT_FOLDER}
-        />
       </div>
 
       {mergeableGroups.length === 0 ? (
@@ -270,17 +252,16 @@ export function MergePreviewPanel({
         <Button
           type="button"
           variant="secondary"
-          disabled={isMerging}
           onClick={onBack}
         >
           ← Back
         </Button>
         <Button
           type="button"
-          disabled={isMerging || mergeableGroups.length === 0}
-          onClick={onMerge}
+          disabled={mergeableGroups.length === 0}
+          onClick={onContinue}
         >
-          {isMerging ? "Merging PDFs…" : "Merge & download"}
+          Continue to page editor →
         </Button>
       </div>
     </section>

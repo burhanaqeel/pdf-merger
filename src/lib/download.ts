@@ -1,7 +1,16 @@
 import JSZip from "jszip";
+import { mergePagesInOrder } from "@/lib/pdf/merge-pages";
 import { sanitizeFolderName } from "@/lib/folder-name";
-import { downloadBlob } from "@/lib/pdf/utils";
-import type { MergeResult } from "@/lib/types";
+import type { ArrangeGroup, MergeResult } from "@/lib/types";
+
+export function downloadBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 export function supportsDirectorySave(): boolean {
   return typeof window !== "undefined" && "showDirectoryPicker" in window;
@@ -53,4 +62,26 @@ export async function saveResultsToDirectory(
     await writable.write(result.blob);
     await writable.close();
   }
+}
+
+export async function mergeArrangeGroups(
+  groups: ArrangeGroup[],
+): Promise<MergeResult[]> {
+  const results: MergeResult[] = [];
+
+  for (const group of groups) {
+    if (group.pages.length === 0) {
+      continue;
+    }
+
+    const bytes = await mergePagesInOrder(group.pages, group.sources);
+
+    results.push({
+      fileName: group.fileName,
+      pageCount: group.pages.length,
+      blob: new Blob([Uint8Array.from(bytes)], { type: "application/pdf" }),
+    });
+  }
+
+  return results;
 }
