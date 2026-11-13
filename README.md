@@ -4,8 +4,6 @@ A small browser tool that merges PDF files from different folders when they shar
 
 Your files stay on your device. Nothing is uploaded to any server.
 
-**Try it here:** http://139.162.60.105:3001
-
 ## What it does
 
 1. Add two or more folders that contain PDFs
