@@ -66,7 +66,7 @@ function PageRow({
               {page.sourceFileName}
             </p>
             <p className="text-xs text-[var(--muted)]">
-              From {page.folderName} · source page {page.pageIndex + 1}
+              From {page.folderName}, source page {page.pageIndex + 1}
             </p>
           </div>
 
@@ -210,7 +210,7 @@ export function PageArrangePanel({
           ← Back
         </Button>
         <Button type="button" disabled={isMerging} onClick={onMerge}>
-          {isMerging ? "Merging…" : "Merge & download folder"}
+          {isMerging ? "Merging..." : "Merge & download folder"}
         </Button>
       </div>
     </section>

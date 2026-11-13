@@ -14,28 +14,19 @@ dist
 .DS_Store
 *.pem
 
-# env files (not baked into image)
+# env files
 .env
 .env.*
 
-# git
+# git / docker / ide
 .git
 .gitignore
-
-# docker
 Dockerfile*
 docker-compose*.yml
 .dockerignore
-
-# IDE
 .vscode
 .idea
-
-# testing
 coverage
-
-# vercel
 .vercel
-
-# typescript
 *.tsbuildinfo
+scripts

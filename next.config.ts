@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // TypeScript is checked locally; skip in Docker builds on low-memory VMs.
+  // Optional skip for lighter Docker builds.
   typescript: {
     ignoreBuildErrors: process.env.SKIP_TYPECHECK === "true",
   },

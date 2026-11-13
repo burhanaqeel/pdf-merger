@@ -108,7 +108,7 @@ function MergeGroupBlock({
           </div>
           <p className="text-sm text-[var(--muted)]">
             {group.sources.length} source
-            {group.sources.length === 1 ? "" : "s"} · pages combined in order below
+            {group.sources.length === 1 ? "" : "s"}, pages combined in order below
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

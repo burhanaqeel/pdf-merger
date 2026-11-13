@@ -73,10 +73,10 @@ export function FolderUploadPanel({
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium">
-              {isLoading ? "Reading PDF files…" : "Click to select a folder"}
+              {isLoading ? "Reading PDF files..." : "Click to select a folder"}
             </p>
             <p className="text-xs text-[var(--muted)]">
-              PDF files only · no subfolders · add multiple folders one at a time
+              PDF files only, no subfolders. Add multiple folders one at a time.
             </p>
           </div>
           <Button
@@ -88,7 +88,7 @@ export function FolderUploadPanel({
               inputRef.current?.click();
             }}
           >
-            {isLoading ? "Processing…" : "Browse folder"}
+            {isLoading ? "Processing..." : "Browse folder"}
           </Button>
         </div>
       </div>

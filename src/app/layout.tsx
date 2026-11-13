@@ -9,7 +9,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: "PDF Merger",
-  description: "Merge PDFs from multiple folders by matching file names",
+  description: "Merge PDFs from different folders by matching file names",
 };
 
 export default function RootLayout({

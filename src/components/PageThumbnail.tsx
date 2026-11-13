@@ -40,7 +40,7 @@ export function PageThumbnail({ file, pageIndex, label }: PageThumbnailProps) {
         <img src={src} alt={label} className="h-full w-full object-contain" />
       ) : (
         <div className="flex h-full items-center justify-center text-xs text-[var(--muted)]">
-          {error ? "Preview unavailable" : "Loading…"}
+          {error ? "Preview unavailable" : "Loading..."}
         </div>
       )}
     </div>

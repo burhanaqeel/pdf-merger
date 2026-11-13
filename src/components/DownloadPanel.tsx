@@ -31,7 +31,7 @@ export function DownloadPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(
     autoDownloaded
-      ? `Download started — check your downloads for "${outputFolderName}.zip"`
+      ? `Download started. Check your downloads for "${outputFolderName}.zip"`
       : null,
   );
 
@@ -79,7 +79,7 @@ export function DownloadPanel({
         </div>
         <h2 className="text-xl font-semibold tracking-tight">Merge complete</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          {results.length} PDF{results.length === 1 ? "" : "s"} · {totalPages}{" "}
+          {results.length} PDF{results.length === 1 ? "" : "s"}, {totalPages}{" "}
           total page{totalPages === 1 ? "" : "s"}
         </p>
       </div>
@@ -133,7 +133,7 @@ export function DownloadPanel({
           onClick={handleDownloadZip}
           disabled={isDownloading || isSaving}
         >
-          {isDownloading ? "Preparing…" : "Download folder (ZIP)"}
+          {isDownloading ? "Preparing..." : "Download folder (ZIP)"}
         </Button>
         {supportsDirectorySave() && (
           <Button
@@ -142,7 +142,7 @@ export function DownloadPanel({
             onClick={handleSaveToFolder}
             disabled={isDownloading || isSaving}
           >
-            {isSaving ? "Saving…" : "Save to folder…"}
+            {isSaving ? "Saving..." : "Save to folder..."}
           </Button>
         )}
         <Button type="button" variant="ghost" onClick={onStartOver}>

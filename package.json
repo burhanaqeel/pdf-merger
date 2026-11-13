@@ -6,10 +6,9 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "deploy": "bash scripts/deploy.sh",
     "lint": "eslint",
-    "docker:dev": "docker compose --env-file .env.local --profile dev up --build",
-    "docker:dev:down": "docker compose --env-file .env.local --profile dev down",
+    "docker:dev": "docker compose --env-file .env --profile dev up --build",
+    "docker:dev:down": "docker compose --env-file .env --profile dev down",
     "docker:prod": "docker compose --env-file .env.production --profile prod up --build -d",
     "docker:prod:down": "docker compose --env-file .env.production --profile prod down"
   },

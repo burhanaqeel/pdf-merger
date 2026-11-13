@@ -52,7 +52,7 @@ export function PdfMergerApp() {
               PDF Merger
             </h1>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Match by filename · arrange pages · download
+              Match by filename, arrange pages, download
             </p>
           </div>
           <StepIndicator current={step} />
